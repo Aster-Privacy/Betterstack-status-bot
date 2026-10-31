@@ -107,7 +107,9 @@ mod tests
     #[test]
     fn follows_only_api_pages()
     {
-        assert!(is_api_url("https://uptime.betterstack.com/api/v2/status-pages/1/resources?page=2"));
+        assert!(is_api_url(
+            "https://uptime.betterstack.com/api/v2/status-pages/1/resources?page=2"
+        ));
         assert!(!is_api_url("https://uptime.betterstack.com.example.net/api"));
         assert!(!is_api_url("http://uptime.betterstack.com/api"));
         assert!(!is_api_url("https://example.net/?u=https://uptime.betterstack.com/"));
