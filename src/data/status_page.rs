@@ -3,6 +3,7 @@ use serde::Deserialize;
 use crate::data::Error;
 
 const MAX_PAGES: usize = 20;
+const API_ORIGIN: &str = "https://uptime.betterstack.com/";
 
 #[derive(Debug, Clone)]
 pub struct StatusPageSettings
@@ -56,7 +57,7 @@ impl StatusPageSettings
     pub async fn get_status_page_resource(&self, client: &reqwest::Client) -> Result<Vec<StatusPageResource>, Error>
     {
         let mut url = Some(format!(
-            "https://uptime.betterstack.com/api/v2/status-pages/{}/resources?per_page=50",
+            "{API_ORIGIN}api/v2/status-pages/{}/resources?per_page=50",
             self.page_id
         ));
 
@@ -86,9 +87,29 @@ impl StatusPageSettings
                 status: resource.attributes.status,
             }));
 
-            url = response.pagination.next;
+            url = response.pagination.next.filter(|next| is_api_url(next));
         }
 
         Ok(resources)
+    }
+}
+
+fn is_api_url(url: &str) -> bool
+{
+    url.starts_with(API_ORIGIN)
+}
+
+#[cfg(test)]
+mod tests
+{
+    use super::is_api_url;
+
+    #[test]
+    fn follows_only_api_pages()
+    {
+        assert!(is_api_url("https://uptime.betterstack.com/api/v2/status-pages/1/resources?page=2"));
+        assert!(!is_api_url("https://uptime.betterstack.com.example.net/api"));
+        assert!(!is_api_url("http://uptime.betterstack.com/api"));
+        assert!(!is_api_url("https://example.net/?u=https://uptime.betterstack.com/"));
     }
 }
